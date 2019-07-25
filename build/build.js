@@ -1,10 +1,11 @@
 var rule = [0, 0, 0, 1, 1, 1, 1, 0];
 rule = [0, 0, 0, 1, 0, 0, 1, 0];
+rule = [0, 1, 1, 0, 1, 1, 1, 0];
+var CANVAS_WIDTH = 512;
 function setup() {
-    createCanvas(2000, 2000);
-    frameRate(1);
-    var button = createButton("submit");
-    button.position(0, 0);
+    createCanvas(CANVAS_WIDTH, CANVAS_WIDTH);
+    var button = createButton("Step");
+    button.position(CANVAS_WIDTH, CANVAS_WIDTH);
     button.mousePressed(draw);
     noLoop();
 }
@@ -18,16 +19,22 @@ var PREDECESSORS = [
     [0, 0, 1],
     [0, 0, 0]
 ];
+var bit_position_from_predecessors = function (pattern) {
+    return PREDECESSORS.findIndex(function (p) { return String(p) == String(pattern); });
+};
+var nextFromPredecessors = function (predecessors) {
+    return rule[bit_position_from_predecessors(predecessors)];
+};
 var PIXEL_SIZE = 2;
-var CANVAS_WIDTH = 128;
-var twoPrevRow = Array(CANVAS_WIDTH)
+var CELL_WIDTH = 256;
+var twoPrevRow = Array(CELL_WIDTH)
     .fill(0)
-    .map(function () { return !!Math.round(Math.random()); });
-var prevRow = Array(CANVAS_WIDTH)
+    .map(function () { return Math.round(Math.random()); });
+var prevRow = Array(CELL_WIDTH)
     .fill(0)
-    .map(function () { return !!Math.round(Math.random()); });
+    .map(function () { return Math.round(Math.random()); });
 var clamp = function (x) { return function (i) { return Math.max(0, Math.min(x - 1, i)); }; };
-var c = clamp(CANVAS_WIDTH);
+var c = clamp(CELL_WIDTH);
 var range = function (x) {
     var counter = 0;
     var result = [];
@@ -41,18 +48,18 @@ var render = function (cells) {
     cells.forEach(function (row, y) {
         row.forEach(function (cell, x) {
             if (cell) {
-                point(x * PIXEL_SIZE, y * PIXEL_SIZE);
+                square(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE);
             }
         });
     });
 };
-var cells = range(CANVAS_WIDTH).map(function (y) {
-    var newRow = range(CANVAS_WIDTH).map(function (x) {
-        var firstOrder = !!rule[PREDECESSORS.findIndex(function (j) {
-            return !!j[0] == prevRow[c(x - 1)] &&
-                !!j[1] == prevRow[x] &&
-                !!j[2] == prevRow[c(x + 1)];
-        })];
+var cells = range(CELL_WIDTH).map(function (y) {
+    var newRow = range(CELL_WIDTH).map(function (x) {
+        var firstOrder = rule[bit_position_from_predecessors([
+            prevRow[c(x - 1)],
+            prevRow[x],
+            prevRow[c(x + 1)]
+        ])];
         var secondOrder = twoPrevRow[x];
         return firstOrder;
     });
@@ -60,15 +67,20 @@ var cells = range(CANVAS_WIDTH).map(function (y) {
     prevRow = newRow;
     return newRow;
 });
-var twoGensAgoCells = range(CANVAS_WIDTH).map(function (y) {
-    var newRow = range(CANVAS_WIDTH).map(function (x) {
-        var firstOrder = !!rule[PREDECESSORS.findIndex(function (j) {
-            return !!j[0] == prevRow[c(x - 1)] &&
-                !!j[1] == prevRow[x] &&
-                !!j[2] == prevRow[c(x + 1)];
-        })];
+var twoGensAgoCells = range(CELL_WIDTH).map(function (y) {
+    var newRow = range(CELL_WIDTH).map(function (x) {
+        var firstOrder = nextFromPredecessors([
+            prevRow[c(x - 1)],
+            prevRow[x],
+            prevRow[c(x + 1)]
+        ]);
         var secondOrder = twoPrevRow[x];
-        return firstOrder;
+        if (firstOrder) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
     });
     twoPrevRow = prevRow;
     prevRow = newRow;
@@ -77,17 +89,17 @@ var twoGensAgoCells = range(CANVAS_WIDTH).map(function (y) {
 var iterate = function (lastGen, twoGensAgo) {
     return cells.map(function (row, x) {
         return row.map(function (cell, y) {
-            var firstOrder = !!rule[PREDECESSORS.findIndex(function (j) {
-                return !!j[0] == cells[c(x)][c(y - 1)] &&
-                    !!j[0] == cells[c(x)][c(y)] &&
-                    !!j[0] == cells[c(x)][c(y + 1)];
-            })];
+            var firstOrder = nextFromPredecessors([
+                cells[c(x)][c(y - 1)],
+                cells[c(x)][c(y)],
+                cells[c(x)][c(y + 1)]
+            ]);
             var secondOrder = twoGensAgo[x][y];
             if (secondOrder != firstOrder) {
-                return true;
+                return 1;
             }
             else {
-                return false;
+                return 0;
             }
         });
     });
@@ -98,5 +110,6 @@ function draw() {
     twoGensAgoCells = cells;
     cells = newCells;
     render(cells);
+    noLoop();
 }
 //# sourceMappingURL=build.js.map
