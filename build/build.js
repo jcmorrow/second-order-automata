@@ -1,109 +1,102 @@
-var Morph = (function () {
-    function Morph() {
-    }
-    Morph.prototype.setup = function () {
-        this.shapes = [];
-        this.currentShape = 0;
-        this.shapes.push({ points: Shapes.circle(100), color: color('#009CDF') });
-        this.shapes.push({ points: Shapes.circle(150), color: color(255, 204, 0) });
-        this.shapes.push({ points: Shapes.square(50), color: color(175, 100, 220) });
-        this.morph = new Array();
-        var highestCount = 0;
-        for (var i = 0; i < this.shapes.length; i++) {
-            highestCount = Math.max(highestCount, this.shapes[i].points.length);
-        }
-        for (var i = 0; i < highestCount; i++) {
-            this.morph.push(new p5.Vector());
-        }
-    };
-    Morph.prototype.recalc = function () {
-        var totalDistance = 0;
-        var points = this.shapes[this.currentShape].points;
-        for (var i = 0; i < points.length; i++) {
-            var v1 = points[i];
-            var v2 = this.morph[i];
-            v2.lerp(v1, 0.1);
-            totalDistance += p5.Vector.dist(v1, v2);
-        }
-        if (totalDistance < 0.1) {
-            this.currentShape++;
-            if (this.currentShape >= this.shapes.length) {
-                this.currentShape = 0;
-            }
-        }
-    };
-    Morph.prototype.draw = function () {
-        this.recalc();
-        var color = this.shapes[this.currentShape].color;
-        var points = this.shapes[this.currentShape].points;
-        translate(width / 2, height / 2);
-        strokeWeight(4);
-        beginShape();
-        noFill();
-        stroke(color);
-        for (var i = 0; i < points.length; i++) {
-            var v = this.morph[i];
-            vertex(v.x, v.y);
-        }
-        endShape(CLOSE);
-    };
-    return Morph;
-}());
-var Shapes = (function () {
-    function Shapes() {
-    }
-    Shapes.circle = function (size) {
-        var points = new Array();
-        for (var angle = 0; angle < 360; angle += 9) {
-            var v = p5.Vector.fromAngle(radians(angle - 135));
-            v.mult(size);
-            points.push(v);
-        }
-        return points;
-    };
-    Shapes.square = function (size) {
-        var points = new Array();
-        for (var x = -size; x < size; x += 10) {
-            points.push(createVector(x, -size));
-        }
-        for (var y = -size; y < size; y += 10) {
-            points.push(createVector(size, y));
-        }
-        for (var x = size; x > -size; x -= 10) {
-            points.push(createVector(x, size));
-        }
-        for (var y = size; y > -size; y -= 10) {
-            points.push(createVector(-size, y));
-        }
-        return points;
-    };
-    Shapes.star = function (x, y, radius1, radius2, npoints) {
-        var angle = TWO_PI / npoints;
-        var halfAngle = angle / 2.0;
-        var points = new Array();
-        for (var a = 0; a < TWO_PI; a += angle) {
-            var sx = x + cos(a) * radius2;
-            var sy = y + sin(a) * radius2;
-            points.push(createVector(sx, sy));
-            sx = x + cos(a + halfAngle) * radius1;
-            sy = y + sin(a + halfAngle) * radius1;
-            points.push(createVector(sx, sy));
-        }
-        return points;
-    };
-    return Shapes;
-}());
-var morph;
+var rule = [0, 0, 0, 1, 1, 1, 1, 0];
+rule = [0, 0, 0, 1, 0, 0, 1, 0];
 function setup() {
-    createCanvas(windowWidth, windowHeight);
-    morph = new Morph();
-    morph.setup();
+    createCanvas(2000, 2000);
+    frameRate(1);
+    var button = createButton("submit");
+    button.position(0, 0);
+    button.mousePressed(draw);
+    noLoop();
 }
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
-}
+var PREDECESSORS = [
+    [1, 1, 1],
+    [1, 1, 0],
+    [1, 0, 1],
+    [1, 0, 0],
+    [0, 1, 1],
+    [0, 1, 0],
+    [0, 0, 1],
+    [0, 0, 0]
+];
+var PIXEL_SIZE = 2;
+var CANVAS_WIDTH = 128;
+var twoPrevRow = Array(CANVAS_WIDTH)
+    .fill(0)
+    .map(function () { return !!Math.round(Math.random()); });
+var prevRow = Array(CANVAS_WIDTH)
+    .fill(0)
+    .map(function () { return !!Math.round(Math.random()); });
+var clamp = function (x) { return function (i) { return Math.max(0, Math.min(x - 1, i)); }; };
+var c = clamp(CANVAS_WIDTH);
+var range = function (x) {
+    var counter = 0;
+    var result = [];
+    while (counter < x) {
+        result.push(counter);
+        counter = counter + 1;
+    }
+    return result;
+};
+var render = function (cells) {
+    cells.forEach(function (row, y) {
+        row.forEach(function (cell, x) {
+            if (cell) {
+                point(x * PIXEL_SIZE, y * PIXEL_SIZE);
+            }
+        });
+    });
+};
+var cells = range(CANVAS_WIDTH).map(function (y) {
+    var newRow = range(CANVAS_WIDTH).map(function (x) {
+        var firstOrder = !!rule[PREDECESSORS.findIndex(function (j) {
+            return !!j[0] == prevRow[c(x - 1)] &&
+                !!j[1] == prevRow[x] &&
+                !!j[2] == prevRow[c(x + 1)];
+        })];
+        var secondOrder = twoPrevRow[x];
+        return firstOrder;
+    });
+    twoPrevRow = prevRow;
+    prevRow = newRow;
+    return newRow;
+});
+var twoGensAgoCells = range(CANVAS_WIDTH).map(function (y) {
+    var newRow = range(CANVAS_WIDTH).map(function (x) {
+        var firstOrder = !!rule[PREDECESSORS.findIndex(function (j) {
+            return !!j[0] == prevRow[c(x - 1)] &&
+                !!j[1] == prevRow[x] &&
+                !!j[2] == prevRow[c(x + 1)];
+        })];
+        var secondOrder = twoPrevRow[x];
+        return firstOrder;
+    });
+    twoPrevRow = prevRow;
+    prevRow = newRow;
+    return newRow;
+});
+var iterate = function (lastGen, twoGensAgo) {
+    return cells.map(function (row, x) {
+        return row.map(function (cell, y) {
+            var firstOrder = !!rule[PREDECESSORS.findIndex(function (j) {
+                return !!j[0] == cells[c(x)][c(y - 1)] &&
+                    !!j[0] == cells[c(x)][c(y)] &&
+                    !!j[0] == cells[c(x)][c(y + 1)];
+            })];
+            var secondOrder = twoGensAgo[x][y];
+            if (secondOrder != firstOrder) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        });
+    });
+};
 function draw() {
-    background(100);
-    morph.draw();
+    clear();
+    var newCells = iterate(cells, twoGensAgoCells);
+    twoGensAgoCells = cells;
+    cells = newCells;
+    render(cells);
 }
 //# sourceMappingURL=build.js.map
