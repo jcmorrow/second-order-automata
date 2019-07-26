@@ -1,13 +1,19 @@
 var rule = [0, 0, 0, 1, 1, 1, 1, 0];
 rule = [0, 0, 0, 1, 0, 0, 1, 0];
-rule = [0, 1, 1, 0, 1, 1, 1, 0];
-var CANVAS_WIDTH = 512;
+var CANVAS_WIDTH = 1024;
+var toBinary = function (i) {
+    return (i >>> 0)
+        .toString(2)
+        .padStart(8, "0")
+        .split("")
+        .map(function (x) { return parseInt(x); });
+};
+console.log(rule);
+console.log(toBinary(30));
+var checkbox;
 function setup() {
     createCanvas(CANVAS_WIDTH, CANVAS_WIDTH);
-    var button = createButton("Step");
-    button.position(CANVAS_WIDTH, CANVAS_WIDTH);
-    button.mousePressed(draw);
-    noLoop();
+    frameRate(5);
 }
 var PREDECESSORS = [
     [1, 1, 1],
@@ -25,7 +31,7 @@ var bit_position_from_predecessors = function (pattern) {
 var nextFromPredecessors = function (predecessors) {
     return rule[bit_position_from_predecessors(predecessors)];
 };
-var PIXEL_SIZE = 2;
+var PIXEL_SIZE = 4;
 var CELL_WIDTH = 256;
 var twoPrevRow = Array(CELL_WIDTH)
     .fill(0)
@@ -53,63 +59,38 @@ var render = function (cells) {
         });
     });
 };
-var cells = range(CELL_WIDTH).map(function (y) {
-    var newRow = range(CELL_WIDTH).map(function (x) {
-        var firstOrder = rule[bit_position_from_predecessors([
-            prevRow[c(x - 1)],
-            prevRow[x],
-            prevRow[c(x + 1)]
-        ])];
-        var secondOrder = twoPrevRow[x];
-        return firstOrder;
-    });
-    twoPrevRow = prevRow;
-    prevRow = newRow;
-    return newRow;
-});
-var twoGensAgoCells = range(CELL_WIDTH).map(function (y) {
-    var newRow = range(CELL_WIDTH).map(function (x) {
+var cells = [twoPrevRow, prevRow];
+var iterate = function (lastGen, twoGensAgo, useSecondOrder) {
+    return lastGen.map(function (x, i) {
         var firstOrder = nextFromPredecessors([
-            prevRow[c(x - 1)],
-            prevRow[x],
-            prevRow[c(x + 1)]
+            lastGen[c(i - 1)],
+            lastGen[c(i)],
+            lastGen[c(i + 1)]
         ]);
-        var secondOrder = twoPrevRow[x];
-        if (firstOrder) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    });
-    twoPrevRow = prevRow;
-    prevRow = newRow;
-    return newRow;
-});
-var iterate = function (lastGen, twoGensAgo) {
-    return cells.map(function (row, x) {
-        return row.map(function (cell, y) {
-            var firstOrder = nextFromPredecessors([
-                cells[c(x)][c(y - 1)],
-                cells[c(x)][c(y)],
-                cells[c(x)][c(y + 1)]
-            ]);
-            var secondOrder = twoGensAgo[x][y];
+        var secondOrder = twoGensAgo[i];
+        if (useSecondOrder) {
             if (secondOrder != firstOrder) {
                 return 1;
             }
             else {
                 return 0;
             }
-        });
+        }
+        else {
+            if (firstOrder) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
     });
 };
 function draw() {
     clear();
-    var newCells = iterate(cells, twoGensAgoCells);
-    twoGensAgoCells = cells;
-    cells = newCells;
+    var newCells = iterate(cells[cells.length - 1], cells[cells.length - 2], window.secondOrder);
+    console.log(newCells);
+    cells.push(newCells);
     render(cells);
-    noLoop();
 }
 //# sourceMappingURL=build.js.map

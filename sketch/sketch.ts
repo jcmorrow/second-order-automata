@@ -5,19 +5,29 @@ let rule = [0, 0, 0, 1, 1, 1, 1, 0];
 rule = [0, 0, 0, 1, 0, 0, 1, 0];
 
 // 110
-rule = [0, 1, 1, 0, 1, 1, 1, 0];
+// rule = [0, 1, 1, 0, 1, 1, 1, 0];
 
 // 184
 // rule = [1, 0, 1, 1, 1, 0, 0, 0];
 
-const CANVAS_WIDTH = 512;
+const CANVAS_WIDTH = 1024;
+
+const toBinary = (i: number) => {
+  return (i >>> 0)
+    .toString(2)
+    .padStart(8, "0")
+    .split("")
+    .map((x: string) => parseInt(x));
+};
+
+console.log(rule);
+console.log(toBinary(30));
+
+let checkbox;
 
 function setup() {
   createCanvas(CANVAS_WIDTH, CANVAS_WIDTH);
-  let button = createButton("Step");
-  button.position(CANVAS_WIDTH, CANVAS_WIDTH);
-  button.mousePressed(draw);
-  noLoop();
+  frameRate(5);
 }
 
 // Which bit should we be looking at? These come from the elementary cellular
@@ -44,7 +54,7 @@ const nextFromPredecessors = (predecessors: Array<number>) => {
 // Pixel size is how big one cell will be in pixels
 // CEll width is how many cells we will attempt to render (the upper limit is
 // the actual HTML canvas size divided by the pixel size
-const PIXEL_SIZE = 2;
+const PIXEL_SIZE = 4;
 const CELL_WIDTH = 256;
 
 // Setting up some variables to generate the first 2d automata layout
@@ -81,73 +91,65 @@ const render = (cells: Array<Array<number>>) => {
   });
 };
 
-let cells: Array<Array<number>> = range(CELL_WIDTH).map(y => {
-  let newRow = range(CELL_WIDTH).map(x => {
-    let firstOrder =
-      rule[
-        bit_position_from_predecessors([
-          prevRow[c(x - 1)],
-          prevRow[x],
-          prevRow[c(x + 1)]
-        ])
-      ];
-    let secondOrder = twoPrevRow[x];
-    return firstOrder;
-  });
-  twoPrevRow = prevRow;
-  prevRow = newRow;
+let cells: Array<Array<number>> = [twoPrevRow, prevRow];
 
-  return newRow;
-});
+// let cells: Array<Array<number>> = range(CELL_WIDTH).map(y => {
+//   let newRow = range(CELL_WIDTH).map(x => {
+//     let firstOrder =
+//       rule[
+//         bit_position_from_predecessors([
+//           prevRow[c(x - 1)],
+//           prevRow[x],
+//           prevRow[c(x + 1)]
+//         ])
+//       ];
+//     let secondOrder = twoPrevRow[x];
+//     return firstOrder;
+//   });
+//   twoPrevRow = prevRow;
+//   prevRow = newRow;
 
-let twoGensAgoCells: Array<Array<number>> = range(CELL_WIDTH).map(y => {
-  let newRow = range(CELL_WIDTH).map(x => {
-    let firstOrder = nextFromPredecessors([
-      prevRow[c(x - 1)],
-      prevRow[x],
-      prevRow[c(x + 1)]
-    ]);
-    let secondOrder = twoPrevRow[x];
-    if (firstOrder) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
-  twoPrevRow = prevRow;
-  prevRow = newRow;
-
-  return newRow;
-});
+//   return newRow;
+// });
 
 const iterate = (
-  lastGen: Array<Array<number>>,
-  twoGensAgo: Array<Array<number>>
+  lastGen: Array<number>,
+  twoGensAgo: Array<number>,
+  useSecondOrder: boolean
 ) =>
-  cells.map((row, x) =>
-    row.map((cell, y) => {
-      let firstOrder = nextFromPredecessors([
-        cells[c(x)][c(y - 1)],
-        cells[c(x)][c(y)],
-        cells[c(x)][c(y + 1)]
-      ]);
-      let secondOrder = twoGensAgo[x][y];
+  lastGen.map((x, i) => {
+    let firstOrder = nextFromPredecessors([
+      lastGen[c(i - 1)],
+      lastGen[c(i)],
+      lastGen[c(i + 1)]
+    ]);
+    let secondOrder = twoGensAgo[i];
+    if (useSecondOrder) {
       if (secondOrder != firstOrder) {
         return 1;
       } else {
         return 0;
       }
-    })
-  );
+    } else {
+      if (firstOrder) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  });
 
 function draw() {
   clear();
 
-  let newCells = iterate(cells, twoGensAgoCells);
-  twoGensAgoCells = cells;
-  cells = newCells;
+  let newCells = iterate(
+    cells[cells.length - 1],
+    cells[cells.length - 2],
+    window.secondOrder
+  );
+  console.log(newCells);
+
+  cells.push(newCells);
 
   render(cells);
-
-  noLoop();
 }
