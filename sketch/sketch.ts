@@ -20,9 +20,6 @@ const toBinary = (i: number) => {
     .map((x: string) => parseInt(x));
 };
 
-console.log(rule);
-console.log(toBinary(30));
-
 let checkbox;
 
 function setup() {
