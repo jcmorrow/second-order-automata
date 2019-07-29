@@ -1,16 +1,9 @@
-// Rule 30
-let rule = [0, 0, 0, 1, 1, 1, 1, 0];
-
-// 18
-rule = [0, 0, 0, 1, 0, 0, 1, 0];
-
-// 110
-// rule = [0, 1, 1, 0, 1, 1, 1, 0];
-
-// 184
-// rule = [1, 0, 1, 1, 1, 0, 0, 0];
-
-const CANVAS_WIDTH = 1024;
+// Pixel size is how big one cell will be in pixels
+// CEll width is how many cells we will attempt to render (the upper limit is
+// the actual HTML canvas size divided by the pixel size
+const CANVAS_WIDTH = 512;
+const PIXEL_SIZE = 4;
+const CELL_WIDTH = 128;
 
 const toBinary = (i: number) => {
   return (i >>> 0)
@@ -19,13 +12,6 @@ const toBinary = (i: number) => {
     .split("")
     .map((x: string) => parseInt(x));
 };
-
-let checkbox;
-
-function setup() {
-  createCanvas(CANVAS_WIDTH, CANVAS_WIDTH);
-  frameRate(5);
-}
 
 // Which bit should we be looking at? These come from the elementary cellular
 // automata rules
@@ -40,32 +26,20 @@ const PREDECESSORS = [
   [0, 0, 0]
 ];
 
-const bit_position_from_predecessors = (pattern: Array<number>) => {
+const bitPositionFromPredecessors = (pattern: Array<number>) => {
   return PREDECESSORS.findIndex(p => String(p) == String(pattern));
 };
 
 const nextFromPredecessors = (predecessors: Array<number>) => {
-  return rule[bit_position_from_predecessors(predecessors)];
+  return toBinary((window as any).rule)[
+    bitPositionFromPredecessors(predecessors)
+  ];
 };
 
-// Pixel size is how big one cell will be in pixels
-// CEll width is how many cells we will attempt to render (the upper limit is
-// the actual HTML canvas size divided by the pixel size
-const PIXEL_SIZE = 4;
-const CELL_WIDTH = 256;
-
-// Setting up some variables to generate the first 2d automata layout
-let twoPrevRow = Array(CELL_WIDTH)
-  .fill(0)
-  .map(() => Math.round(Math.random()));
-let prevRow = Array(CELL_WIDTH)
-  .fill(0)
-  .map(() => Math.round(Math.random()));
-
-// Handy clamp function, returns a closure that will clamp between 0 and the
-// given number. Positive numbers only.
-const clamp = (x: number) => (i: number) => Math.max(0, Math.min(x - 1, i));
-let c = clamp(CELL_WIDTH);
+const randomBinaryString = (length: number) =>
+  Array(length)
+    .fill(0)
+    .map(() => Math.round(Math.random()));
 
 // Annoying that we don't have this function in JS otherwise
 const range = (x: number) => {
@@ -78,36 +52,30 @@ const range = (x: number) => {
   return result;
 };
 
+// Handy clamp function, returns a closure that will clamp between 0 and the
+// given number. Positive numbers only.
+const clamp = (x: number) => (i: number) => Math.max(0, Math.min(x - 1, i));
+let c = clamp(CELL_WIDTH);
+
+(window as any).rule = 30;
+
+// Setting up some variables to generate the first 2d automata layout
+let twoPrevRow: Array<number> = randomBinaryString(CELL_WIDTH);
+let prevRow: Array<number> = randomBinaryString(CELL_WIDTH);
+
 const render = (cells: Array<Array<number>>) => {
   cells.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
+        // square(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE);
         square(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE);
+        fill(200, 200, 200);
       }
     });
   });
 };
 
 let cells: Array<Array<number>> = [twoPrevRow, prevRow];
-
-// let cells: Array<Array<number>> = range(CELL_WIDTH).map(y => {
-//   let newRow = range(CELL_WIDTH).map(x => {
-//     let firstOrder =
-//       rule[
-//         bit_position_from_predecessors([
-//           prevRow[c(x - 1)],
-//           prevRow[x],
-//           prevRow[c(x + 1)]
-//         ])
-//       ];
-//     let secondOrder = twoPrevRow[x];
-//     return firstOrder;
-//   });
-//   twoPrevRow = prevRow;
-//   prevRow = newRow;
-
-//   return newRow;
-// });
 
 const iterate = (
   lastGen: Array<number>,
@@ -136,16 +104,22 @@ const iterate = (
     }
   });
 
+function setup() {
+  let canvas = createCanvas(CANVAS_WIDTH, CANVAS_WIDTH);
+  canvas.parent("#automata");
+}
+
 function draw() {
   clear();
 
   let newCells = iterate(
     cells[cells.length - 1],
     cells[cells.length - 2],
-    window.secondOrder
+    (window as any).secondOrder
   );
-  console.log(newCells);
-
+  if (cells.length > CELL_WIDTH) {
+    cells.shift();
+  }
   cells.push(newCells);
 
   render(cells);

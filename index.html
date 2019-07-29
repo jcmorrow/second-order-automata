@@ -1,28 +1,65 @@
 <html>
-    <head>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.js"></script>
-        <script src="build/build.js"></script>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.js"></script>
+    <script src="build/build.js"></script>
 
-        <link rel="shortcut icon" href="https://p5js.org/assets/img/favicon.ico">
-            <link rel="icon" href="https://p5js.org/assets/img/favicon.ico">
+    <link rel="stylesheet" href="build/hack.css">
+    <link rel="shortcut icon" href="https://p5js.org/assets/img/favicon.ico">
+    <link rel="icon" href="https://p5js.org/assets/img/favicon.ico">
 
-        <style>
-            * {
-                padding: 0px;
-                margin: 0px;
-            }
-        </style>
-        <script>
-        </script>
-    </head>
-    <body>
+    <style>
+* {
+  padding: 0px;
+  margin: 0px;
+}
+#automata {
+  max-width: 512px;
+}
+#container {
+  display: flex;
+}
+#about {
+  float: right;
+  max-width: 600px;
+  margin: auto;
+}
+    </style>
+    <script>
+    </script>
+  </head>
+  <body  class="hack">
+    <div id="container">
+      <div id="automata">
 
-      <label style="position: absolute; top: 0px; left: 1100px;" >
-        <input
-        type="checkbox"
-        onChange="window.secondOrder = !window.secondOrder"/>
-        Second Order
-      </label>
-    </body>
+        <div class="controls" >
+        <h1>Controls</h1>
+          <label>
+            <input
+          type="checkbox"
+      onChange="window.secondOrder = !window.secondOrder"/>
+            Second Order
+          </label>
+          |
+          <label>
+            Rule: &nbsp;
+            <input
+          type="text"
+          value="30"
+      onChange="console.log(this.value); window.rule = this.value"/>
+          </label>
+        </div>
+      </div>
+      <div style="" id="about">
+      <h1>Second Order Elementary Cellular Automata</h1>
+        Cellular automata are very interesting things. These are elementary
+        cellular automata, starting from a random seed. You can try out
+        different automata rules by typing a new number in the box and hitting
+        Enter (some favorites to try are 18, 30, and 184). If you select the
+        "Second order" box you will see that same rule rendered in second order.
+        For more information on what that means, check out this wikipedia
+        article: <a href="https://en.wikipedia.org/wiki/Second-order_cellular_automaton">https://en.wikipedia.org/wiki/Second-order_cellular_automaton</a>
+      </div>
+    </div>
+  </body>
 </html>

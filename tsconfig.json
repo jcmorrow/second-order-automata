@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
-        "lib": [ "es6", "dom" ],
-        "target": "es5",
+        "target": "es2016",
+        "lib": [
+            "es2017",
+            "dom"
+        ],
         "removeComments": true,
         "preserveConstEnums": true,
         "outFile": "./build/build.js",
