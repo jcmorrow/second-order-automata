@@ -18,6 +18,10 @@ const PREDECESSORS = [
     [0, 0, 1],
     [0, 0, 0]
 ];
+const nextFromPredecessorsBitwise = (predecessors) => {
+    let predsAsNumber = predecessors[0] * 4 + predecessors[1] * 2 + predecessors[2] * 1;
+    return (2 ** predsAsNumber) & window.rule;
+};
 const bitPositionFromPredecessors = (pattern) => {
     return PREDECESSORS.findIndex(p => String(p) == String(pattern));
 };
@@ -53,7 +57,7 @@ const render = (cells) => {
 };
 let cells = [twoPrevRow, prevRow];
 const iterate = (lastGen, twoGensAgo, useSecondOrder) => lastGen.map((x, i) => {
-    let firstOrder = nextFromPredecessors([
+    let firstOrder = nextFromPredecessorsBitwise([
         lastGen[c(i - 1)],
         lastGen[c(i)],
         lastGen[c(i + 1)]
@@ -86,7 +90,6 @@ function draw() {
     if (cells.length > CELL_WIDTH) {
         cells.shift();
     }
-    cells.push(newCells);
     render(cells);
 }
 //# sourceMappingURL=build.js.map
