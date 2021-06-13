@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild app.tsx --bundle --minify --sourcemap --outfile=out.js --watch",
+    "build": "esbuild src/app.tsx --bundle --minify --sourcemap --outfile=build/out.js --watch",
     "test": "jest"
   },
   "author": "",
