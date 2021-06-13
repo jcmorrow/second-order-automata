@@ -31,8 +31,9 @@ const SecondOrderAutomataCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [state, setState] = useState({
-    secondOrder: true,
     rule: 30,
+    scroll: true,
+    secondOrder: true,
     startTime: Date.now(),
   });
   const [frame, setFrame] = useState(0);
@@ -50,7 +51,9 @@ const SecondOrderAutomataCanvas: React.FC = () => {
       setFrame(frame + 1);
     });
     if (cells.length > CELL_WIDTH) {
-      // cancelAnimationFrame(frameId);
+      if (!state.scroll) {
+        cancelAnimationFrame(frameId);
+      }
       cells.shift();
     }
     const newCells = nextRow(
@@ -60,7 +63,7 @@ const SecondOrderAutomataCanvas: React.FC = () => {
       state.rule
     );
     cells.push(newCells);
-  }, [frame]);
+  }, [frame, state.scroll]);
 
   return (
     <div
@@ -88,12 +91,22 @@ const SecondOrderAutomataCanvas: React.FC = () => {
         <label>
           <input
             type="checkbox"
+            style={{ verticalAlign: "middle", marginRight: "5px" }}
             checked={state.secondOrder}
             onChange={(e) =>
               setState({ ...state, secondOrder: e.target.checked })
             }
           />
           Second Order
+        </label>
+        <label>
+          <input
+            style={{ verticalAlign: "middle", marginRight: "5px" }}
+            type="checkbox"
+            checked={state.scroll}
+            onChange={(e) => setState({ ...state, scroll: e.target.checked })}
+          />
+          Scroll
         </label>
         <input
           type="text"
