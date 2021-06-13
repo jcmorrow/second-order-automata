@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild app.tsx --bundle --minify --sourcemap --target=chrome58,firefox57,safari11,edge16 --outfile=out.js",
+    "build": "esbuild app.tsx --bundle --minify --sourcemap --outfile=out.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -23,6 +23,7 @@
     "@typescript-eslint/parser": "^4.26.1",
     "eslint": "^7.28.0",
     "eslint-plugin-react": "^7.24.0",
+    "jest": "^27.0.4",
     "typescript": "^4.3.2"
   }
 }
