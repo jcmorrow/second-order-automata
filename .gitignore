@@ -1,1 +1,2 @@
-build/**
+build/out.js
+build/out.js.map
