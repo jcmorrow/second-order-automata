@@ -27,9 +27,9 @@ const renderCanvas = (rows: number[][], canvas: CanvasRenderingContext2D) => {
 
 const cells: Array<Array<number>> = [twoPrevRow, prevRow];
 
-const SecondOrderAutomataCanvas: React.FC<Record<string, never>> = () => {
-  // we use a ref to access the canvas' DOM node
+const SecondOrderAutomataCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const [state, setState] = useState({
     secondOrder: true,
     rule: 30,
@@ -43,14 +43,14 @@ const SecondOrderAutomataCanvas: React.FC<Record<string, never>> = () => {
     if (context) {
       renderCanvas(cells, context);
     }
-  }, [canvasRef, frame, state.rule]);
+  }, [canvasRef, frame]);
 
   useEffect(() => {
     const frameId = requestAnimationFrame(() => {
       setFrame(frame + 1);
     });
     if (cells.length > CELL_WIDTH) {
-      cancelAnimationFrame(frameId);
+      // cancelAnimationFrame(frameId);
       cells.shift();
     }
     const newCells = nextRow(
@@ -63,22 +63,52 @@ const SecondOrderAutomataCanvas: React.FC<Record<string, never>> = () => {
   }, [frame]);
 
   return (
-    <>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+      }}
+    >
       <canvas height="500" width="500" ref={canvasRef} />
-      <button
-        onClick={() =>
-          setState({ ...state, rule: Math.round(Math.random() * 255) })
-        }
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-around",
+          padding: "10px",
+        }}
       >
-        Random Rule
-      </button>
-      <input
-        type="checkbox"
-        checked={state.secondOrder}
-        onChange={(e) => setState({ ...state, secondOrder: e.target.checked })}
-      />
-      Second Order
-    </>
+        <button
+          onClick={() =>
+            setState({ ...state, rule: Math.round(Math.random() * 255) })
+          }
+        >
+          Random Rule
+        </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={state.secondOrder}
+            onChange={(e) =>
+              setState({ ...state, secondOrder: e.target.checked })
+            }
+          />
+          Second Order
+        </label>
+        <input
+          type="text"
+          value={state.rule}
+          onChange={(e) => {
+            const newRule = parseInt(e.target.value);
+            if (!isNaN(newRule)) {
+              setState({ ...state, rule: newRule });
+            } else {
+              setState({ ...state, rule: undefined });
+            }
+          }}
+        />
+      </div>
+    </div>
   );
 };
 
