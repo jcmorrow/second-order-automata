@@ -2,21 +2,25 @@ import React, { useRef, useState, useEffect } from "react";
 
 import { randomBinaryString, nextRow } from "./utils";
 
-const CELL_WIDTH = 128;
-const PIXEL_SIZE = 4;
+const CELL_WIDTH = 512;
+const PIXEL_SIZE = 1;
 
 // Setting up some variables to generate the first 2d automata layout
 const twoPrevRow: Array<number> = randomBinaryString(CELL_WIDTH);
 const prevRow: Array<number> = randomBinaryString(CELL_WIDTH);
 
-const renderCanvas = (rows: number[][], canvas: CanvasRenderingContext2D) => {
-  canvas.clearRect(0, 0, CELL_WIDTH * PIXEL_SIZE, CELL_WIDTH * PIXEL_SIZE);
+const renderCanvas = (
+  rows: number[][],
+  canvas: CanvasRenderingContext2D,
+  offset: number
+) => {
+  // canvas.clearRect(0, 0, CELL_WIDTH * PIXEL_SIZE, CELL_WIDTH * PIXEL_SIZE);
   rows.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
-        canvas.strokeRect(
+        canvas.fillRect(
           x * PIXEL_SIZE,
-          y * PIXEL_SIZE,
+          (y + offset) * PIXEL_SIZE,
           PIXEL_SIZE,
           PIXEL_SIZE
         );
@@ -42,7 +46,7 @@ const SecondOrderAutomataCanvas: React.FC = () => {
     const context = canvasRef?.current?.getContext("2d");
 
     if (context) {
-      renderCanvas(cells, context);
+      renderCanvas(cells.slice(cells.length - 2), context, cells.length - 2);
     }
   }, [canvasRef, frame]);
 
@@ -56,13 +60,14 @@ const SecondOrderAutomataCanvas: React.FC = () => {
       }
       cells.shift();
     }
-    const newCells = nextRow(
-      cells[cells.length - 1],
-      cells[cells.length - 2],
-      state.secondOrder,
-      state.rule
+    cells.push(
+      nextRow(
+        cells[cells.length - 1],
+        cells[cells.length - 2],
+        state.secondOrder,
+        state.rule
+      )
     );
-    cells.push(newCells);
   }, [frame, state.scroll]);
 
   return (
